@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  es7-17:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
+    container_name: es7-17
+    environment:
+      - node.name=es7-17
+      - cluster.name=es-cluster
+      - cluster.initial_master_nodes=es7-17
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - ${ELASTIC_PORT}:9200
+    volumes:
+      - esdata7-17:/usr/share/elasticsearch/data
+    networks:
+      - es7-17-net
+
+  kibana7-17:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
+    container_name: kibana7-17
+    # restart: always
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es7-17:9200
+      - ELASTICSEARCH_URL=http://es7-17:9200
+    ports:
+      - ${KIBANA_PORT}:5601
+    depends_on:
+      - es7-17
+    networks:
+      - es7-17-net
+
+volumes:
+  esdata7-17:
+    driver: local
+
+networks:
+  es7-17-net:
+    driver: bridge
